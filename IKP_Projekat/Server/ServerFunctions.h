@@ -44,6 +44,33 @@ DWORD WINAPI ClientConnectThread(LPVOID param);
 DWORD WINAPI ClientMessageThread(LPVOID param);
 
 /*
+	Function: ClientMessageThread
+	------------------------------------
+	[ Functionality ]: Reads message from ring buffer and passes it to Replicator
+	[     Params    ]: replicatorSocket -> SOCKET*
+	[  Return Value ]: None
+*/
+DWORD WINAPI PassMessageToReplicatorThread(LPVOID param);
+
+/*
+	Function: ClientMessageThread
+	------------------------------------
+	[ Functionality ]:
+	[     Params    ]:
+	[  Return Value ]:
+*/
+DWORD WINAPI ReplicatorMessageThread(LPVOID param);
+
+/*
+	Function:
+	------------------------------------
+	[ Functionality ]:
+	[     Params    ]:
+	[  Return Value ]:
+*/
+DWORD WINAPI PassMessageFromReplicatorToClient(LPVOID param);
+
+/*
 	Function: SetUpListenSockets
 	------------------------------------
 	[ Functionality ]:

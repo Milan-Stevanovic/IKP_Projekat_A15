@@ -5,7 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ws2tcpip.h>
+#include "../Common/Message.h"
 #include "Colors.h"
+
+CRITICAL_SECTION lock;
 
 /*
     Function: PushData
@@ -26,8 +29,23 @@ void PushData(struct DataNode** head, char* data);
 */
 void PrintDataList(struct DataNode** head);
 
+/*
+    Function: ReceiveData
+    ------------------------------------
+    [ Functionality ]: Send all data to original
+    [     Params    ]: clientID -> int, head -> DataNode*, socket -> SOCKET*
+    [  Return Value ]: None
+*/
+void ReceiveData(int clientID, DataNode** head, SOCKET* socket);
 
-
+/*
+    Function: RequestIntegrityUpdate
+    ------------------------------------
+    [ Functionality ]: Send all data to original
+    [     Params    ]: clientID -> int, head -> DataNode*, socket -> SOCKET*
+    [  Return Value ]: None
+*/
+void RequestIntegrityUpdate(int clientID, DataNode** head, SOCKET* socket);
 
 struct DataNode {
     char data[DEFAULT_BUFLEN];
@@ -67,4 +85,48 @@ void PrintDataList(struct DataNode** head)
         temp = temp->next;
     }
     printf("=====================================\n\n" WHITE);
+}
+
+void ReceiveData(int clientID, DataNode** head, SOCKET* socket)
+{
+    struct DataNode* temp = *head;
+    Message messageToSend;
+    int iResult;
+    messageToSend.id = htons(clientID);
+    messageToSend.flag = htons(RECEIVE_DATA);
+
+    while (temp != NULL)
+    {
+        strcpy(messageToSend.data, temp->data);
+        iResult = send(*socket, (char*)&messageToSend, (int)sizeof(Message), 0);
+
+        if (iResult == SOCKET_ERROR)
+        {
+            printf(RED"RECEIVE DATA failed to send message: %d\n" WHITE, WSAGetLastError());
+        }
+        temp = temp->next;
+        Sleep(10); // Give time to Replicator to read all messages
+    }
+}
+
+void RequestIntegrityUpdate(int clientID, DataNode** head, SOCKET* socket)
+{
+    struct DataNode* temp = *head;
+    Message messageToSend;
+    int iResult;
+    messageToSend.id = htons(clientID);
+    messageToSend.flag = htons(REQUEST_INTEGRITY_UPDATE);
+
+    while (temp != NULL)
+    {
+        strcpy(messageToSend.data, temp->data);
+        iResult = send(*socket, (char*)&messageToSend, (int)sizeof(Message), 0);
+
+        if (iResult == SOCKET_ERROR)
+        {
+            printf(RED"RECEIVE DATA failed to send message: %d\n" WHITE, WSAGetLastError());
+        }
+        temp = temp->next;
+        Sleep(10); // Give time to Replicator to read all messages
+    }
 }

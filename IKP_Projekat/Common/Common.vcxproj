@@ -23,6 +23,7 @@
     <ClInclude Include="Colors.h" />
     <ClInclude Include="DataList.h" />
     <ClInclude Include="Message.h" />
+    <ClInclude Include="ResizableRingBuffer.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

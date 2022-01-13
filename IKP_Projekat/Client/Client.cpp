@@ -1,6 +1,5 @@
 #define WIN32_LEAN_AND_MEAN
 #include "../Common/DataList.h"
-#include "../Common/Message.h"
 #include "ClientFunctions.h"
 
 #define DEFAULT_PORT 11000
@@ -37,7 +36,7 @@ int main()
 
                     // message to send
                     message.id = htons(0);
-                    message.flag = htons(0);
+                    message.flag = htons(REGISTER);
                     sprintf(message.data, "%d", clientID, strlen(message.data));
                 }
                 else
@@ -65,15 +64,35 @@ int main()
                 }
                 break;
             case 3: // Recieve Data
+                if (IsClientRegistered(clientID))
+                {
+                    message.id = htons(clientID);
+                    message.flag = htons(RECEIVE_DATA);
+                    sprintf(message.data, "%s", "RECEIVE DATA", strlen(message.data));
+                }
+                else
+                {
+                    sendMessage = false;
+                }
                 break;
             case 4: // Request Integrity Update
+                if (IsClientRegistered(clientID))
+                {
+                    message.id = htons(clientID);
+                    message.flag = htons(REQUEST_INTEGRITY_UPDATE);
+                    sprintf(message.data, "%s", "REQUEST INTEGRITY UPDATE", strlen(message.data));
+                }
+                else
+                {
+                    sendMessage = false;
+                }
                 break;
             case 5: // Relaunch Copy Client
                 if (IsClientRegistered(clientID))
                 {
                     message.id = htons(clientID);
                     message.flag = htons(RELAUNCH_COPY);
-                    sprintf(message.data, "", strlen(message.data));
+                    sprintf(message.data, "%d", clientID, strlen(message.data));
                 }
                 else
                 {
@@ -140,13 +159,15 @@ DWORD WINAPI RecieveMessageFromServerThread(LPVOID param)
             if (FD_ISSET(*connectedSocket, &readfds))
             {
                 // Recieve response from server
-                iResult = recv(*connectedSocket, recvbuf, DEFAULT_BUFLEN, 0);
+                iResult = recv(*connectedSocket, recvbuf, sizeof(struct Message), 0);
                 if (iResult > 0)
                 {
                     recievedMessage = (Message*)recvbuf;
                     printf(MAGENTA "\n[ SERVER MESSAGE ] %s\n\n" WHITE, recievedMessage->data);
-
-                    if (strcmp(recievedMessage->data, "[ FAIL ] Try again, client with ID = %d already registered!") == 0)
+                    // TODO: Check flags and add logic
+                    char compareString[256];
+                    sprintf(compareString, "[ FAIL ] Try again, client with ID = %d already registered!", clientID, strlen(compareString));
+                    if (strcmp(recievedMessage->data, compareString) == 0)
                         clientID = 0;
                 }
                 else if (iResult == 0)

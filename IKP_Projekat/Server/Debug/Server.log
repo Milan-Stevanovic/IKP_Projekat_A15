@@ -1,1 +1,11 @@
-﻿
+﻿  Server.cpp
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Common\ClientList.h(3,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(160,119): warning C4474: 'sprintf' : too many arguments passed for format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(160,119): message : placeholders and their parameters expect 1 variadic arguments, but 2 were provided
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(171,129): warning C4474: 'sprintf' : too many arguments passed for format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(171,129): message : placeholders and their parameters expect 1 variadic arguments, but 2 were provided
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(183,124): warning C4474: 'sprintf' : too many arguments passed for format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(183,124): message : placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+  ServerFunctions.cpp
+  Generating Code...
+  Server.vcxproj -> D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Debug\Server.exe

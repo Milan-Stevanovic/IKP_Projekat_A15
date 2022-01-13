@@ -5,33 +5,45 @@
 #include <stdio.h>
 #include "ServerFunctions.h"
 #include "../Common/ClientList.h"
-#include "../Common/Message.h"
+#include "../Common/ResizableRingBuffer.h"
 
 #define DEFAULT_BUFLEN 512
 #define CLIENT_PORT "11000"
-#define REPLICATOR_PORT 12000
 
+RING_BUFFER ClientToReplicatorRingBuffer;
+RING_BUFFER ReplicatorToClientRingBuffer;
 
 ClientNode* head = NULL;
-HANDLE clientConnectHandle, clientMessageHandle;
-
+HANDLE clientConnectHandle, clientMessageHandle, replicatorMessageHandle;
+HANDLE passMessageHandle, passMessageFromReplicatorToClient;
+SOCKET replicatorSocket = INVALID_SOCKET;
 
 int main()
 {
+    InitRing(&ClientToReplicatorRingBuffer, RING_SIZE);
+    InitRing(&ReplicatorToClientRingBuffer, RING_SIZE);
+
     if (InitializeWindowsSockets() == false)
     {
         return 1;
     }
 
     SOCKET listenSocket = SetUpListenSockets(CLIENT_PORT);
+
+    
     SetSocketToNonBlockingMode(listenSocket);
 
     int iResult;
     printf("Server initialized, waiting for server to connect.\n");
 
+    replicatorSocket = ReplicatorConnection();
+
     // Thread
     clientConnectHandle = CreateThread(NULL, 0, &ClientConnectThread, &listenSocket, NULL, NULL);
     clientMessageHandle = CreateThread(NULL, 0, &ClientMessageThread, NULL, NULL, NULL);
+    passMessageHandle   = CreateThread(NULL, 0, &PassMessageToReplicatorThread, &replicatorSocket, NULL, NULL);
+    replicatorMessageHandle = CreateThread(NULL, 0, &ReplicatorMessageThread, &replicatorSocket, NULL, NULL);
+    passMessageFromReplicatorToClient = CreateThread(NULL, 0, &PassMessageFromReplicatorToClient, NULL, NULL, NULL);
 
     int lil = getchar();
 
@@ -54,7 +66,9 @@ int main()
 
     CloseHandle(clientConnectHandle);
     CloseHandle(clientMessageHandle);
-
+    CloseHandle(passMessageHandle);
+    CloseHandle(replicatorMessageHandle);
+    CloseHandle(passMessageFromReplicatorToClient);
     WSACleanup();
     return 0;
 }
@@ -109,7 +123,6 @@ DWORD WINAPI ClientMessageThread(LPVOID param)
     fd_set readfds;
     FD_ZERO(&readfds);
 
-
     timeval timeVal;
     timeVal.tv_sec = 1;
     timeVal.tv_usec = 0;
@@ -145,56 +158,52 @@ DWORD WINAPI ClientMessageThread(LPVOID param)
                     if (iResult > 0)
                     {
                         recievedMessageFromClients = (Message*)recvbuf;
+
                         Message response;
-                        response.id = ntohs(recievedMessageFromClients->id);
+                        response.id = htons(recievedMessageFromClients->id);
 
-                        if (temp->registerID == 0 && ntohs(recievedMessageFromClients->flag) == REGISTER)
+                        switch (ntohs(recievedMessageFromClients->flag))
                         {
-                            int id = ntohs(recievedMessageFromClients->id);
-                            if (!ClientAlreadyRegistered(&head, atoi(recievedMessageFromClients->data)))
-                            {
-                                temp->registerID = atoi(recievedMessageFromClients->data);
-                                PrintList(&head);
+                            case REGISTER:
+                                if (temp->registerID == 0)
+                                {
+                                    if (!ClientAlreadyRegistered(&head, atoi(recievedMessageFromClients->data)))
+                                    {
+                                        temp->registerID = atoi(recievedMessageFromClients->data);
+                                        PrintList(&head);
 
-                                response.flag = htons(REGISTER);
-                                sprintf(response.data, "[ SUCCESS ] Registered with ID = %d", temp->registerID, strlen(response.data));
+                                        response.flag = htons(REGISTER);
+                                        sprintf(response.data, "[ SUCCESS ] Registered with ID = %d", temp->registerID, strlen(response.data));
 
-                                
-
-                                // Pass message to replicator
-                                //iResult = send(replicatorSocket, recvbuf, DEFAULT_BUFLEN, 0);
-                                //Push(&ringBuffer, (char *)recvbuf);
-                            }
-                            else
-                            {
-                                response.flag = htons(REGISTER);
-                                sprintf(response.data, "[ FAIL ] Try again, client with ID = %d already registered!", id, strlen(response.data));
-
-                            }
+                                        recievedMessageFromClients->id = ntohs(temp->registerID);
+                                        Push(&ClientToReplicatorRingBuffer, recievedMessageFromClients);
+                                    }
+                                    else
+                                    {
+                                        response.flag = htons(REGISTER);
+                                        sprintf(response.data, "[ FAIL ] Try again, client with ID = %d already registered!", atoi(recievedMessageFromClients->data), strlen(response.data));
+                                    }
+                                }
+                                break;
+                            case SEND_DATA:
+                                printf(YELLOW "[ MESSAGE THREAD ] Message from client %d: %s \n" WHITE, temp->registerID, recievedMessageFromClients->data);
+                                Push(&ClientToReplicatorRingBuffer, recievedMessageFromClients);
+                                sprintf(response.data, "[ SUCCESS ] Server recieved data! Data saved to client memory!", strlen(response.data));
+                                break;
+                            case RECEIVE_DATA:
+                                printf(YELLOW "[ MESSAGE THREAD ] Client %d requested to recieve data.\n" WHITE, temp->registerID);
+                                Push(&ClientToReplicatorRingBuffer, recievedMessageFromClients);
+                                break;
+                            case REQUEST_INTEGRITY_UPDATE:
+                                printf(YELLOW "[ MESSAGE THREAD ] Client %d requested Integrity Update (IU).\n" WHITE, temp->registerID);
+                                Push(&ClientToReplicatorRingBuffer, recievedMessageFromClients);
+                                break;
+                            case RELAUNCH_COPY:
+                                printf(YELLOW "[ MESSAGE THREAD ] Client %d requested to relaunch client copy.\n" WHITE, temp->registerID);
+                                Push(&ClientToReplicatorRingBuffer, recievedMessageFromClients);
+                                break;
                         }
-                        else if (ntohs(recievedMessageFromClients->flag) == SEND_DATA)
-                        {
-                            printf(YELLOW "[ MESSAGE THREAD ] Message from client %d: %s \n" WHITE, temp->registerID, recievedMessageFromClients->data);
 
-                            //Push(&ringBuffer, (char *)recvbuf);
-                            // Pass message to replicator
-                            //iResult = send(replicatorSocket, recvbuf, DEFAULT_BUFLEN, 0);
-
-                            sprintf(response.data, "[ SUCCESS ] Server recieved data! Data saved to client memory!", strlen(response.data));
-                        }
-                        /*else if (strcmp(recievedStruct->flag, "[rlc]") == 0)
-                        {
-                            printf(YELLOW "[ MESSAGE THREAD ] Request from client to relaunch client copy %d \n" WHITE, temp->registerID);
-
-                            //Push(&ringBuffer, (char*)recvbuf);
-
-                            // Pass message to replicator
-                            //sprintf(messageToSend, "[rlc]%d", temp->registerID, strlen(messageToSend));
-                            //iResult = send(replicatorSocket, recvbuf, DEFAULT_BUFLEN, 0);
-
-                            sprintf(messageToSend, "[ SUCCESS ] Request passed to replicator! Starting client copy soon.", strlen(messageToSend));
-                        }
-                        */
                         // Send client response message to client
                         iResult = send(temp->acceptedSocket, (char*)&response, (int)sizeof(Message), 0);
                     }
@@ -223,6 +232,108 @@ DWORD WINAPI ClientMessageThread(LPVOID param)
                 if (temp != NULL)
                     temp = temp->next;
             }
+        }
+    }
+}
+
+DWORD WINAPI PassMessageToReplicatorThread(LPVOID param)
+{
+    SOCKET* replicatorSocket = (SOCKET*)param;
+
+    struct Message passMessage;
+    int iResult;
+
+    while (true)
+    {
+        if (!IsEmpty(&ClientToReplicatorRingBuffer))
+        {
+            passMessage = Pop(&ClientToReplicatorRingBuffer);
+            iResult = send(*replicatorSocket, (char*)&passMessage, sizeof(struct Message), 0);
+            if (iResult == SOCKET_ERROR)
+            {
+                printf(RED"Send failed with error: %d\n" WHITE, WSAGetLastError());
+            }
+        }
+        else
+        {
+            Sleep(100);
+        }
+    }
+}
+
+DWORD WINAPI ReplicatorMessageThread(LPVOID param)
+{
+    SOCKET* replicatorSocket = (SOCKET*)param;
+    fd_set readfds;
+    FD_ZERO(&readfds);
+
+    timeval timeVal;
+    timeVal.tv_sec = 1;
+    timeVal.tv_usec = 0;
+    char recvbuf[DEFAULT_BUFLEN];
+    Message* recievedMessageFromServer;
+
+    while (true)
+    {
+        FD_SET(*replicatorSocket, &readfds);
+        int result = select(0, &readfds, NULL, NULL, &timeVal);
+
+        if (result == 0) {
+            // vreme za cekanje je isteklo
+        }
+        else if (result == SOCKET_ERROR) {
+            //desila se greska prilikom poziva funkcije
+            // obrada error-a
+        }
+        else
+        {
+            if (FD_ISSET(*replicatorSocket, &readfds))
+            {
+                int iResult = recv(*replicatorSocket, recvbuf, sizeof(struct Message), 0);
+                if (iResult > 0)
+                {
+                    recievedMessageFromServer = (Message*)recvbuf;
+                    Push(&ReplicatorToClientRingBuffer, recievedMessageFromServer);
+                    printf(YELLOW"\n [ RECIEVED REPLICATOR MSG ] ID = %d | FLAG = %d | DATA = %s\n" WHITE,
+                        ntohs(recievedMessageFromServer->id), ntohs(recievedMessageFromServer->flag), recievedMessageFromServer->data);
+                }
+            }
+        }
+
+    }
+}
+
+DWORD WINAPI PassMessageFromReplicatorToClient(LPVOID param)
+{
+    ClientNode* temp;
+    struct Message passMessage;
+    int iResult;
+
+    while (true)
+    {
+        if (!IsEmpty(&ReplicatorToClientRingBuffer))
+        {
+            passMessage = Pop(&ReplicatorToClientRingBuffer);
+            // Logic for processing message
+ 
+            temp = head;
+            while (temp != NULL)
+            {
+                if (temp->registerID == ntohs(passMessage.id))
+                {
+                    iResult = send(temp->acceptedSocket, (char*)&passMessage, sizeof(struct Message), 0);
+                    if (iResult == SOCKET_ERROR)
+                    {
+                        printf(RED"Send failed with error: %d\n" WHITE, WSAGetLastError());
+                    }
+                }
+                temp = temp->next;
+                Sleep(10);
+            }
+        }
+        else
+        {
+            Sleep(100);
         }
     }
 }

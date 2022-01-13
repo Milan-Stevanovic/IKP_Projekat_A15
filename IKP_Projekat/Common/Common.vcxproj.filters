@@ -27,5 +27,8 @@
     <ClInclude Include="ClientList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ResizableRingBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
