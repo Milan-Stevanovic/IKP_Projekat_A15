@@ -24,8 +24,6 @@ int Menu();
 int main(int argc, char** argv)
 {
     clientCopyId = atoi(argv[1]);
-    //clientCopyId = 1;
-
     printf("ClientCopy ID = %d\n", clientCopyId);
 
     if (InitializeWindowsSockets() == false)
@@ -36,7 +34,7 @@ int main(int argc, char** argv)
     SOCKET connectedSocket = ConnectCopyToReplicator(CLIENT_COPY_PORT);
     SetSocketToNonBlockingMode(connectedSocket);
 
-    msgHandle = CreateThread(NULL, 0, &RecieveMessageFromReplicatorThread, &connectedSocket, NULL, NULL);
+    msgHandle = CreateThread(NULL, 0, &ReceiveReplicatorMessageThread, &connectedSocket, NULL, NULL);
 
     Message messageToSend;
     int iResult;
@@ -56,23 +54,32 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    // Request Integrity Update on startup
+    messageToSend.flag = htons(REQ_INTEGRITY_UPDATE);
+    sprintf(messageToSend.data, "", strlen(messageToSend.data));
+    iResult = send(connectedSocket, (char*)&messageToSend, (int)sizeof(Message), 0);
+
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("send failed with error: %d\n", WSAGetLastError());
+        closesocket(connectedSocket);
+        WSACleanup();
+        return 1;
+    }
+
+
     bool sendMessage;
     while (true)
     {
         sendMessage = true;
         switch (Menu())
         {
-            case 1: // Recieve Data
+            case 1: // Request Recieve Data
                 messageToSend.id = htons(clientCopyId);
-                messageToSend.flag = htons(RECEIVE_DATA);
+                messageToSend.flag = htons(REQ_REC_DATA);
                 sprintf(messageToSend.data, "%d", clientCopyId, strlen(messageToSend.data));
                 break;
-            case 2: // Request Integrity Update
-                messageToSend.id = htons(clientCopyId);
-                messageToSend.flag = htons(REQUEST_INTEGRITY_UPDATE);
-                sprintf(messageToSend.data, "%d", clientCopyId, strlen(messageToSend.data));
-                break;
-            case 3: // Print Your Data
+            case 2: // Print Your Data
                 PrintDataList(&head);
                 sendMessage = false;
                 break;
@@ -92,16 +99,20 @@ int main(int argc, char** argv)
         }
     }
 
-    getchar();
-
+    // Clean Up:
+    printf(BLUE "\nPlease wait, clean up in progress ..." WHITE);
     CloseHandle(msgHandle);
     closesocket(connectedSocket);
+    DeleteDataList(&head);
     WSACleanup();
+    printf(BLUE "\nClean up is finished." WHITE);
+
+    getchar();
 
     return 0;
 }
 
-DWORD WINAPI RecieveMessageFromReplicatorThread(LPVOID param)
+DWORD WINAPI ReceiveReplicatorMessageThread(LPVOID param)
 {
     Message* recievedMessage;
     char recvbuf[DEFAULT_BUFLEN];
@@ -137,16 +148,25 @@ DWORD WINAPI RecieveMessageFromReplicatorThread(LPVOID param)
                     switch (ntohs(recievedMessage->flag))
                     {
                         case SEND_DATA:
+                            printf(MAGENTA "\n[ REPLICATOR MESSAGE ] [ SEND DATA ] %s\n" WHITE, recievedMessage->data);
                             PushData(&head, recievedMessage->data);
                             break;
-                        case RECEIVE_DATA:
+                        case REC_DATA:
+                            printf(MAGENTA "\n[ REPLICATOR MESSAGE ] [ RECEIVE DATA ] %s\n" WHITE, recievedMessage->data);
+                            break;
+                        case INTEGRITY_UPDATE:
+                            printf(MAGENTA "\n[ REPLICATOR MESSAGE ] [ INTEGRITY UPDATE ] \n" WHITE);
+                            PushData(&head, recievedMessage->data);
+                            break;
+                        case REQ_REC_DATA:
+                            printf(MAGENTA "\n[ REPLICATOR MESSAGE ] [ REQUEST RECEIVE DATA ] Original requested to receive data.\n" WHITE);
                             ReceiveData(clientCopyId, &head, connectedSocket);
                             break;
-                        case REQUEST_INTEGRITY_UPDATE:
+                        case REQ_INTEGRITY_UPDATE:
+                            printf(MAGENTA "\n[ REPLICATOR MESSAGE ] [ REQUEST INTEGRITY UPDATE ] Original requested Integrity Update (IU).\n" WHITE);
                             RequestIntegrityUpdate(clientCopyId, &head, connectedSocket);
                             break;
                     }
-                    printf(MAGENTA "\n[ REPLICATOR MESSAGE ] %s\n\n" WHITE, recievedMessage->data);
                 }
                 else if (iResult == 0)
                 {

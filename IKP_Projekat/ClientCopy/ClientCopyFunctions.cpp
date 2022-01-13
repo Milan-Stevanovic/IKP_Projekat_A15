@@ -21,14 +21,13 @@ int Menu()
     Sleep(100); // Giving time to RecieveMessageThread to print response if it has one
     printf("============= MENU =============\n");
     printf("[ 1 ] Receive Data\n");
-    printf("[ 2 ] Request Integrity Update\n");
-    printf("[ 3 ] Print your data\n");
+    printf("[ 2 ] Print your data\n");
     printf("================================\n");
     int select = -1;
     do {
         printf("Select Option: ");
         scanf("%d", &select);
-    } while (select < 1 || select > 4);
+    } while (select < 1 || select > 2);
 
     return select;
 }

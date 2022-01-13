@@ -124,10 +124,12 @@ bool IsEmpty(RING_BUFFER* ring)
 struct Message Pop(RING_BUFFER* ring)
 {
 	struct Message data;
+
+	EnterCriticalSection(&(ring->cs));
 	data.id = (ring->data[ring->head]).id;
 	data.flag = (ring->data[ring->head]).flag;
 	strcpy(data.data, (ring->data[ring->head]).data);
-
+	
 	if (ring->head == ring->tail)
 	{
 		ring->head = -1;

@@ -1,27 +1,27 @@
 /*
-	Function: 
+	Function: InitializeWindowsSockets
 	------------------------------------
-	[ Functionality ]: 
-	[     Params    ]: 
-	[  Return Value ]: 
+	[ Functionality ]: Setd up WsaData values
+	[     Params    ]: None
+	[  Return Value ]: bool 
 */
 bool InitializeWindowsSockets();
 
 /*
-	Function:
+	Function: Menu
 	------------------------------------
-	[ Functionality ]:
-	[     Params    ]:
-	[  Return Value ]:
+	[ Functionality ]: Prints all available options and reads client response.
+	[     Params    ]: None
+	[  Return Value ]: option selected -> int
 */
 int Menu();
 
 /*
-	Function:
+	Function: ConnectCopyToReplicator
 	------------------------------------
-	[ Functionality ]:
-	[     Params    ]:
-	[  Return Value ]:
+	[ Functionality ]: Makes new SOCKET, sets all necessary values and connects socket to Server base on port
+	[     Params    ]: (Servers) port -> int
+	[  Return Value ]: SOCKET connectedSocket
 */
 SOCKET ConnectCopyToReplicator(int port);
 
@@ -35,10 +35,10 @@ SOCKET ConnectCopyToReplicator(int port);
 void SetSocketToNonBlockingMode(SOCKET socket);
 
 /*
-	Function: RecieveMessageFromReplicatorThread
+	Function: ReceiveReplicatorMessageThread
 	------------------------------------
 	[ Functionality ]: Thread that is used to receive messages from replicator
 	[     Params    ]: socket -> SOCKET*
 	[  Return Value ]: None
 */
-DWORD WINAPI RecieveMessageFromReplicatorThread(LPVOID param);
+DWORD WINAPI ReceiveReplicatorMessageThread(LPVOID param);

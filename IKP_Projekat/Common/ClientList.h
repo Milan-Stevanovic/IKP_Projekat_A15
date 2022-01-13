@@ -43,6 +43,15 @@ void PrintList(struct ClientNode** head);
 */
 bool ClientAlreadyRegistered(struct ClientNode** head, int id);
 
+/*
+    Function: DeleteClientList
+    ------------------------------------
+    [ Functionality ]: Delets all elements of the list and initialize head to NULL
+    [     Params    ]: head -> struct ClientNode**
+    [  Return Value ]: None
+*/
+void DeleteClientList(struct ClientNode** head);
+
 
 struct ClientNode {
     SOCKET acceptedSocket;
@@ -121,4 +130,19 @@ bool ClientAlreadyRegistered(struct ClientNode** head, int id)
         temp = temp->next;
     }
     return false;
+}
+
+void DeleteClientList(struct ClientNode** head)
+{
+    struct ClientNode* current = *head;
+    struct ClientNode* next = NULL;
+
+    while (current != NULL)
+    {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+
+    *head = NULL;
 }

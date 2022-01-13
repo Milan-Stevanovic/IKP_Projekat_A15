@@ -10,11 +10,11 @@ bool InitializeWindowsSockets();
 /*
 	Function: ReplicatorConnection
 	------------------------------------
-	[ Functionality ]: 
-	[     Params    ]: 
-	[  Return Value ]: 
+	[ Functionality ]: Makes new socket for communication with replicator and connects to replicator.
+	[     Params    ]: ( Replicators ) port -> int
+	[  Return Value ]: replicatorSocket -> SOCKET
 */
-SOCKET ReplicatorConnection();
+SOCKET ReplicatorConnection(int port);
 
 /*
 	Function: SetSocketToNonBlockingMode
@@ -26,55 +26,55 @@ SOCKET ReplicatorConnection();
 void SetSocketToNonBlockingMode(SOCKET socket);
 
 /*
-	Function: ClientConnectThread
+	Function: ClientConnectionThread
 	------------------------------------
-	[ Functionality ]:
-	[     Params    ]:
-	[  Return Value ]:
+	[ Functionality ]: Thread listen for new clients connection, accepts them and adds them to ClientList.
+	[     Params    ]: listenSocket -> SOCKET *
+	[  Return Value ]: None
 */
-DWORD WINAPI ClientConnectThread(LPVOID param);
+DWORD WINAPI ClientConnectionThread(LPVOID param);
 
 /*
-	Function: ClientMessageThread
+	Function: ReceiveClientMessageThread
 	------------------------------------
-	[ Functionality ]:
-	[     Params    ]:
-	[  Return Value ]:
+	[ Functionality ]: Receives messages from clients, process the message and puts message in ring buffer to pass it to replicator.
+	[     Params    ]: None
+	[  Return Value ]: None
 */
-DWORD WINAPI ClientMessageThread(LPVOID param);
+DWORD WINAPI ReceiveClientMessageThread(LPVOID param);
 
 /*
-	Function: ClientMessageThread
+	Function: PassMessageFromClientToReplicatorThread
 	------------------------------------
 	[ Functionality ]: Reads message from ring buffer and passes it to Replicator
 	[     Params    ]: replicatorSocket -> SOCKET*
 	[  Return Value ]: None
 */
-DWORD WINAPI PassMessageToReplicatorThread(LPVOID param);
+DWORD WINAPI PassMessageFromClientToReplicatorThread(LPVOID param);
 
 /*
-	Function: ClientMessageThread
+	Function: ReceiveReplicatorMessageThread
 	------------------------------------
-	[ Functionality ]:
-	[     Params    ]:
-	[  Return Value ]:
+	[ Functionality ]: Receives all messages from replicator.
+	[     Params    ]: replicatorSocket -> SOCKET *
+	[  Return Value ]: None
 */
-DWORD WINAPI ReplicatorMessageThread(LPVOID param);
+DWORD WINAPI ReceiveReplicatorMessageThread(LPVOID param);
 
 /*
-	Function:
+	Function: PassMessageFromReplicatorToClientThread
 	------------------------------------
-	[ Functionality ]:
-	[     Params    ]:
-	[  Return Value ]:
+	[ Functionality ]: If ring buffer isn't empty, gets first message in ring and passes it to coresponding client.
+	[     Params    ]: None
+	[  Return Value ]: None
 */
-DWORD WINAPI PassMessageFromReplicatorToClient(LPVOID param);
+DWORD WINAPI PassMessageFromReplicatorToClientThread(LPVOID param);
 
 /*
 	Function: SetUpListenSockets
 	------------------------------------
-	[ Functionality ]:
-	[     Params    ]:
-	[  Return Value ]:
+	[ Functionality ]: Makes new socket and set it to listen on port that passed by function call.
+	[     Params    ]: port -> const char*
+	[  Return Value ]: SOCKET -> listenSocket
 */
 SOCKET SetUpListenSockets(const char* port);

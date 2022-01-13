@@ -18,11 +18,27 @@ int main()
 	SOCKET connectedSocket = ConnectToServer(DEFAULT_PORT);
 	SetSocketToNonBlockingMode(connectedSocket);
 
-	msgHandle = CreateThread(NULL, 0, &RecieveMessageFromServerThread, &connectedSocket, NULL, NULL);
+	msgHandle = CreateThread(NULL, 0, &ReceiveServerMessageThread, &connectedSocket, NULL, NULL);
 
     bool sendMessage;
+    bool requestIU = true;
     while (true)
     {
+        if (clientID != 0 && requestIU)
+        {
+            requestIU = false;
+            message.id = htons(clientID);
+            message.flag = htons(REQ_INTEGRITY_UPDATE);
+            iResult = send(connectedSocket, (char*)&message, (int)sizeof(Message), 0);
+
+            if (iResult == SOCKET_ERROR)
+            {
+                printf(RED"Reuquest Integrity Update failed with error: %d\n" WHITE, WSAGetLastError());
+                closesocket(connectedSocket);
+                WSACleanup();
+                return 1;
+            }
+        }
         sendMessage = true;
         switch (Menu())
         {
@@ -67,7 +83,7 @@ int main()
                 if (IsClientRegistered(clientID))
                 {
                     message.id = htons(clientID);
-                    message.flag = htons(RECEIVE_DATA);
+                    message.flag = htons(REQ_REC_DATA);
                     sprintf(message.data, "%s", "RECEIVE DATA", strlen(message.data));
                 }
                 else
@@ -75,19 +91,7 @@ int main()
                     sendMessage = false;
                 }
                 break;
-            case 4: // Request Integrity Update
-                if (IsClientRegistered(clientID))
-                {
-                    message.id = htons(clientID);
-                    message.flag = htons(REQUEST_INTEGRITY_UPDATE);
-                    sprintf(message.data, "%s", "REQUEST INTEGRITY UPDATE", strlen(message.data));
-                }
-                else
-                {
-                    sendMessage = false;
-                }
-                break;
-            case 5: // Relaunch Copy Client
+            case 4: // Relaunch Copy Client
                 if (IsClientRegistered(clientID))
                 {
                     message.id = htons(clientID);
@@ -99,11 +103,42 @@ int main()
                     sendMessage = false;
                 }
                 break;
-            case 6: // Print Data
+            case 5: // Print Data
                 if (IsClientRegistered(clientID))
                 {
                     PrintDataList(&head);
                 }
+                sendMessage = false;
+                break;
+            case 6: // Stress Test
+                message.id = htons(clientID);
+                for (int i = 0; i < 1000; i++)
+                {
+                    message.flag = htons(SEND_DATA);
+                    sprintf(message.data, "Stress Test - %d", i, strlen(message.data));
+
+                    iResult = send(connectedSocket, (char*)&message, (int)sizeof(Message), 0);
+
+                    if (iResult == SOCKET_ERROR)
+                    {
+                        printf("send failed with error: %d\n", WSAGetLastError());
+                        closesocket(connectedSocket);
+                        WSACleanup();
+                        return 1;
+                    }
+                    Sleep(1);
+                }
+                message.flag = htons(REQ_REC_DATA);
+                iResult = send(connectedSocket, (char*)&message, (int)sizeof(Message), 0);
+                if (iResult == SOCKET_ERROR)
+                {
+                    printf("send failed with error: %d\n", WSAGetLastError());
+                    closesocket(connectedSocket);
+                    WSACleanup();
+                    return 1;
+                }
+                Sleep(1);
+
                 sendMessage = false;
                 break;
         }
@@ -122,15 +157,20 @@ int main()
         }
     }
 
+    // Clean Up:
+    printf(BLUE "\nPlease wait, clean up in progress ..." WHITE);
     CloseHandle(msgHandle);
-
     closesocket(connectedSocket);
+    DeleteDataList(&head);
     WSACleanup();
+    printf(BLUE "\nClean up is finished." WHITE);
+
+    getchar();
 
     return 0;
 }
 
-DWORD WINAPI RecieveMessageFromServerThread(LPVOID param)
+DWORD WINAPI ReceiveServerMessageThread(LPVOID param)
 {
     Message *recievedMessage;
     char recvbuf[DEFAULT_BUFLEN];
@@ -163,12 +203,33 @@ DWORD WINAPI RecieveMessageFromServerThread(LPVOID param)
                 if (iResult > 0)
                 {
                     recievedMessage = (Message*)recvbuf;
-                    printf(MAGENTA "\n[ SERVER MESSAGE ] %s\n\n" WHITE, recievedMessage->data);
+                    
                     // TODO: Check flags and add logic
-                    char compareString[256];
-                    sprintf(compareString, "[ FAIL ] Try again, client with ID = %d already registered!", clientID, strlen(compareString));
-                    if (strcmp(recievedMessage->data, compareString) == 0)
-                        clientID = 0;
+                    switch (ntohs(recievedMessage->flag))
+                    {
+                        case REGISTER:
+                            printf(MAGENTA "\n[ SERVER MESSAGE ] %s\n\n" WHITE, recievedMessage->data);
+                            char compareString[256];
+                            sprintf(compareString, "[ FAIL ] Try again, client with ID = %d already registered!", clientID, strlen(compareString));
+                            if (strcmp(recievedMessage->data, compareString) == 0)
+                                clientID = 0;
+                            break;
+                        case REC_DATA:
+                            printf(MAGENTA "\n[ SERVER MESSAGE ] [ RECEIVED DATA ] %s\n" WHITE, recievedMessage->data);
+                            break;
+                        case REQ_REC_DATA:
+                            ReceiveData(clientID, &head, connectedSocket);
+                            printf(MAGENTA "\n[ SERVER MESSAGE ] [ REQUEST RECEIVE DATA ] Copy requested to receive data.\n" WHITE);
+                            break;
+                        case INTEGRITY_UPDATE:
+                            printf(MAGENTA "\n[ SERVER MESSAGE ] [ INTEGRITY UPDATE ] \n" WHITE);
+                            PushData(&head, recievedMessage->data);
+                            break;
+                        case REQ_INTEGRITY_UPDATE:
+                            RequestIntegrityUpdate(clientID, &head, connectedSocket);
+                            printf(MAGENTA "\n[ SERVER MESSAGE ] [ REQUEST INTEGRITY UPDATE ] Copy requested Integrity Update (IU).\n" WHITE);
+                            break;
+                    }
                 }
                 else if (iResult == 0)
                 {
@@ -178,6 +239,5 @@ DWORD WINAPI RecieveMessageFromServerThread(LPVOID param)
                 }
             }
         }
-        Sleep(100);
     }
 }

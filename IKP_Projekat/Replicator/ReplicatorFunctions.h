@@ -1,47 +1,47 @@
 /*
-	Function: ConnectClientsThread
+	Function: ClientCopyConnectionThread
 	------------------------------------
 	[ Functionality ]: Threades function for accepting clientcopy connections
 	[     Params    ]: clientListenSocket -> SOCKET*
 	[  Return Value ]: None
 */
-DWORD WINAPI ConnectClientsThread(LPVOID param);
+DWORD WINAPI ClientCopyConnectionThread(LPVOID param);
 
 /*
-	Function: ClientMessageThread
+	Function: ReceiveClientCopyMessageThread
 	------------------------------------
 	[ Functionality ]: Reveives all messages from client copies
 	[     Params    ]: None
 	[  Return Value ]: None
 */
-DWORD WINAPI ClientMessageThread(LPVOID param);
+DWORD WINAPI ReceiveClientCopyMessageThread(LPVOID param);
 
 /*
-	Function: ServerMessageThread
+	Function: ReceiveServerMessageThread
 	------------------------------------
 	[ Functionality ]: Reveives all messages from server
 	[     Params    ]: serverSocket -> SOCKET*
 	[  Return Value ]: None
 */
-DWORD WINAPI ServerMessageThread(LPVOID param);
+DWORD WINAPI ReceiveServerMessageThread(LPVOID param);
 
 /*
-	Function: PassServerMessageThread
+	Function: PassMessageFromServerToClientCopyThread
 	------------------------------------
 	[ Functionality ]: Get message from ring buffer () and pass it to CopyClient
 	[     Params    ]: None
 	[  Return Value ]: None
 */
-DWORD WINAPI PassServerMessageThread(LPVOID param);
+DWORD WINAPI PassMessageFromServerToClientCopyThread(LPVOID param);
 
 /*
-	Function: PassMessageFromClientToServer
+	Function: PassMessageFromClientCopyToServerThread
 	------------------------------------
 	[ Functionality ]: Get message from ring buffer and pass it to Server
 	[     Params    ]: serverSocket -> SOCKET*
 	[  Return Value ]: None
 */
-DWORD WINAPI PassMessageFromClientToServer(LPVOID param);
+DWORD WINAPI PassMessageFromClientCopyToServerThread(LPVOID param);
 
 /*
 	Function: InitializeWindowsSockets

@@ -46,10 +46,10 @@ bool IsClientRegistered(int clientId);
 
 
 /*
-	Function: RecieveMessageFromServerThread
+	Function: ReceiveServerMessageThread
 	------------------------------------
 	[ Functionality ]: Thread that is used to receive messages from server
 	[     Params    ]: socket -> SOCKET*
 	[  Return Value ]: None
 */
-DWORD WINAPI RecieveMessageFromServerThread(LPVOID param);
+DWORD WINAPI ReceiveServerMessageThread(LPVOID param);

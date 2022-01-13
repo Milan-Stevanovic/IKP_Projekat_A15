@@ -30,6 +30,15 @@ void PushData(struct DataNode** head, char* data);
 void PrintDataList(struct DataNode** head);
 
 /*
+    Function: DeleteDataList
+    ------------------------------------
+    [ Functionality ]: Delets all elements of the list and initialize head to NULL
+    [     Params    ]: head -> struct DataNode**
+    [  Return Value ]: None
+*/
+void DeleteDataList(struct DataNode** head);
+
+/*
     Function: ReceiveData
     ------------------------------------
     [ Functionality ]: Send all data to original
@@ -87,13 +96,28 @@ void PrintDataList(struct DataNode** head)
     printf("=====================================\n\n" WHITE);
 }
 
+void DeleteDataList(struct DataNode** head)
+{
+    struct DataNode* current = *head;
+    struct DataNode* next = NULL;
+
+    while (current != NULL)
+    {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+
+    *head = NULL;
+}
+
 void ReceiveData(int clientID, DataNode** head, SOCKET* socket)
 {
     struct DataNode* temp = *head;
     Message messageToSend;
     int iResult;
     messageToSend.id = htons(clientID);
-    messageToSend.flag = htons(RECEIVE_DATA);
+    messageToSend.flag = htons(REC_DATA);
 
     while (temp != NULL)
     {
@@ -115,7 +139,7 @@ void RequestIntegrityUpdate(int clientID, DataNode** head, SOCKET* socket)
     Message messageToSend;
     int iResult;
     messageToSend.id = htons(clientID);
-    messageToSend.flag = htons(REQUEST_INTEGRITY_UPDATE);
+    messageToSend.flag = htons(INTEGRITY_UPDATE);
 
     while (temp != NULL)
     {

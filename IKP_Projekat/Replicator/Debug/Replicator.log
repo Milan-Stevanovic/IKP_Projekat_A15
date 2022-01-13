@@ -1,0 +1,7 @@
+﻿  ReplicatorFunctions.cpp
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\ReplicatorFunctions.cpp(23,59): warning C4474: 'sprintf' : too many arguments passed for format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\ReplicatorFunctions.cpp(23,59): message : placeholders and their parameters expect 1 variadic arguments, but 2 were provided
+  Replicator.cpp
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Common\ClientList.h(3,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  Generating Code...
+  Replicator.vcxproj -> D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Debug\Replicator.exe

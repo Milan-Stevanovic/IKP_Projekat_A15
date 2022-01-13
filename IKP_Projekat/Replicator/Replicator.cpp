@@ -55,13 +55,15 @@ int main()
     SetSocketToNonBlockingMode(clientListenSocket);
     
     // Thread
-    connClientCopies = CreateThread(NULL, 0, &ConnectClientsThread, &clientListenSocket, NULL, NULL);
-    msgClientCopies  = CreateThread(NULL, 0, &ClientMessageThread, NULL, NULL, NULL);
-    msgServer        = CreateThread(NULL, 0, &ServerMessageThread, &serverSocket, NULL, NULL);
-    passServerMessageThread = CreateThread(NULL, 0, &PassServerMessageThread, NULL, NULL, NULL);
-    passClientMessageToServerThread = CreateThread(NULL, 0, &PassMessageFromClientToServer, &serverSocket, NULL, NULL);
+    connClientCopies = CreateThread(NULL, 0, &ClientCopyConnectionThread, &clientListenSocket, NULL, NULL);
+    msgClientCopies  = CreateThread(NULL, 0, &ReceiveClientCopyMessageThread, NULL, NULL, NULL);
+    msgServer        = CreateThread(NULL, 0, &ReceiveServerMessageThread, &serverSocket, NULL, NULL);
+    passServerMessageThread = CreateThread(NULL, 0, &PassMessageFromServerToClientCopyThread, NULL, NULL, NULL);
+    passClientMessageToServerThread = CreateThread(NULL, 0, &PassMessageFromClientCopyToServerThread, &serverSocket, NULL, NULL);
 
     int lil = getchar();
+
+    printf(BLUE "\nPlease wait, clean up in progress ..." WHITE);
 
     CloseHandle(connClientCopies);
     CloseHandle(msgClientCopies);
@@ -85,16 +87,22 @@ int main()
         temp = temp->next;
     }
 
+
     closesocket(serverListenSocket);
     closesocket(clientListenSocket);
     closesocket(serverSocket);
 
+    // Clean Up : Delete client list
+    DeleteClientList(&head);
     WSACleanup();
+    printf(BLUE "\nClean up is finished." WHITE);
+
     lil = getchar();
+
     return 0;
 }
 
-DWORD WINAPI ConnectClientsThread(LPVOID param) // Thread to connect CopyClients to replicator and to assign them accepted socket
+DWORD WINAPI ClientCopyConnectionThread(LPVOID param) // Thread to connect CopyClients to replicator and to assign them accepted socket
 {
     SOCKET* clientListenSocket = (SOCKET*)param;
     fd_set listenfds;
@@ -138,7 +146,7 @@ DWORD WINAPI ConnectClientsThread(LPVOID param) // Thread to connect CopyClients
     } while (1);
 }
 
-DWORD WINAPI ClientMessageThread(LPVOID param) // Recieve messages from CopyClients
+DWORD WINAPI ReceiveClientCopyMessageThread(LPVOID param) // Recieve messages from CopyClients
 {
     fd_set readfds;
     FD_ZERO(&readfds);
@@ -173,7 +181,7 @@ DWORD WINAPI ClientMessageThread(LPVOID param) // Recieve messages from CopyClie
             {
                 if (FD_ISSET(temp->acceptedSocket, &readfds))
                 {
-                    int iResult = recv(temp->acceptedSocket, recvbuf, DEFAULT_BUFLEN, 0);
+                    int iResult = recv(temp->acceptedSocket, recvbuf, sizeof(struct Message), 0);
                     if (iResult > 0)
                     {
                         recievedMessageFromCopyClient = (Message*)recvbuf;
@@ -186,7 +194,8 @@ DWORD WINAPI ClientMessageThread(LPVOID param) // Recieve messages from CopyClie
                                 PrintList(&head);
                             }
                         }
-                        if (temp->registerID != 0 && (ntohs(recievedMessageFromCopyClient->flag) == RECEIVE_DATA || ntohs(recievedMessageFromCopyClient->flag) == REQUEST_INTEGRITY_UPDATE)) // RECIEVE DATA
+                        if (temp->registerID != 0 && (ntohs(recievedMessageFromCopyClient->flag) == REQ_REC_DATA || ntohs(recievedMessageFromCopyClient->flag) == REQ_INTEGRITY_UPDATE)
+                            || ntohs(recievedMessageFromCopyClient->flag) == REC_DATA || ntohs(recievedMessageFromCopyClient->flag) == INTEGRITY_UPDATE) // RECIEVE DATA
                         {
                             Push(&ClientToServerRingBuffer, recievedMessageFromCopyClient);
                             printf("R = %s\n", recievedMessageFromCopyClient->data);
@@ -222,7 +231,7 @@ DWORD WINAPI ClientMessageThread(LPVOID param) // Recieve messages from CopyClie
     } while (1);
 }
 
-DWORD WINAPI ServerMessageThread(LPVOID param) // Recieve messages from Server
+DWORD WINAPI ReceiveServerMessageThread(LPVOID param) // Recieve messages from Server
 {
     SOCKET* serverSocket = (SOCKET*)param;
     fd_set readfds;
@@ -250,7 +259,7 @@ DWORD WINAPI ServerMessageThread(LPVOID param) // Recieve messages from Server
         {
             if (FD_ISSET(*serverSocket, &readfds))
             {
-                int iResult = recv(*serverSocket, recvbuf, DEFAULT_BUFLEN, 0);
+                int iResult = recv(*serverSocket, recvbuf, sizeof(struct Message), 0);
                 if (iResult > 0)
                 {
                     recievedMessageFromServer = (Message*)recvbuf;
@@ -264,7 +273,7 @@ DWORD WINAPI ServerMessageThread(LPVOID param) // Recieve messages from Server
     }
 }
 
-DWORD WINAPI PassServerMessageThread(LPVOID param)
+DWORD WINAPI PassMessageFromServerToClientCopyThread(LPVOID param)
 {
     ClientNode* temp;
     struct Message passMessage;
@@ -283,25 +292,20 @@ DWORD WINAPI PassServerMessageThread(LPVOID param)
                     LaunchClientCopy(atoi(passMessage.data));
                 }
             }
-            else if (ntohs(passMessage.flag) == SEND_DATA ||
-                     ntohs(passMessage.flag) == RECEIVE_DATA ||
-                     ntohs(passMessage.flag) == REQUEST_INTEGRITY_UPDATE) // SEND DATA & RECEIVE_DATA & REQUEST IU
+            else
             {
-                if (!ClientAlreadyRegistered(&head, atoi(passMessage.data)))
+                temp = head;
+                while (temp != NULL)
                 {
-                    temp = head;
-                    while (temp != NULL)
+                    if (temp->registerID == ntohs(passMessage.id))
                     {
-                        if (temp->registerID == ntohs(passMessage.id))
+                        iResult = send(temp->acceptedSocket, (char*)&passMessage, sizeof(struct Message), 0);
+                        if (iResult == SOCKET_ERROR)
                         {
-                            iResult = send(temp->acceptedSocket, (char*)&passMessage, sizeof(struct Message), 0);
-                            if (iResult == SOCKET_ERROR)
-                            {
-                                printf(RED"Send failed with error: %d\n" WHITE, WSAGetLastError());
-                            }
+                            printf(RED"Send failed with error: %d\n" WHITE, WSAGetLastError());
                         }
-                        temp = temp->next;
                     }
+                    temp = temp->next;
                 }
             }
         }
@@ -312,7 +316,7 @@ DWORD WINAPI PassServerMessageThread(LPVOID param)
     }
 }
 
-DWORD WINAPI PassMessageFromClientToServer(LPVOID param)
+DWORD WINAPI PassMessageFromClientCopyToServerThread(LPVOID param)
 {
     SOCKET* serverSocket = (SOCKET*)param;
     struct Message passMessage;

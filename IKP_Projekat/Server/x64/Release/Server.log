@@ -1,0 +1,22 @@
+﻿  Server.cpp
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Common\ClientList.h(3,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Common\ClientList.h(114,16): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 3 has type 'SOCKET'
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Common\ClientList.h(114,16): message : consider using '%lld' in the format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Common\ClientList.h(114,16): message : consider using '%Id' in the format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Common\ClientList.h(114,16): message : consider using '%I64d' in the format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(188,127): warning C4474: 'sprintf' : too many arguments passed for format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(188,127): message : placeholders and their parameters expect 1 variadic arguments, but 2 were provided
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(196,173): warning C4474: 'sprintf' : too many arguments passed for format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(196,173): message : placeholders and their parameters expect 1 variadic arguments, but 2 were provided
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(205,128): warning C4474: 'sprintf' : too many arguments passed for format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(205,128): message : placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(237,32): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'SOCKET'
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(237,32): message : consider using '%lld' in the format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(237,32): message : consider using '%Id' in the format string
+D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\Server\Server.cpp(237,32): message : consider using '%I64d' in the format string
+  ServerFunctions.cpp
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 26 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Server.vcxproj -> D:\FAX\4 Godina\7. SEMESTAR\(IKP) Industrijski komunikacioni protokoli u elektroenergetskim sistemima\MOJ PROJEKAT\IKP_Projekat_A15\IKP_Projekat\x64\Release\Server.exe

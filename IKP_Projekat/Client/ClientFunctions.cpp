@@ -25,10 +25,10 @@ int Menu()
     printf("============= MENU =============\n");
     printf("[ 1 ] Register ID\n");
     printf("[ 2 ] Send Data\n");
-    printf("[ 3 ] Receive Data\n");
-    printf("[ 4 ] Request Integrity Update\n");
-    printf("[ 5 ] Relaunch Copy\n");
-    printf("[ 6 ] Print your data\n");
+    printf("[ 3 ] Receive Data\n");\
+    printf("[ 4 ] Relaunch Copy\n");
+    printf("[ 5 ] Print your data\n");
+    printf("[ 6 ] Stress Test (1000 messages)\n");
     printf("================================\n");
     int select = -1;
     do {

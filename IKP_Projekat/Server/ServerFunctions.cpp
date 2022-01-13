@@ -3,7 +3,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define DEFAULT_BUFLEN 512
-#define REPLICATOR_PORT 12000
 #include <stdio.h>
 #include <stdlib.h>
 #include <ws2tcpip.h>
@@ -20,7 +19,7 @@ bool InitializeWindowsSockets()
     return true;
 }
 
-SOCKET ReplicatorConnection()
+SOCKET ReplicatorConnection(int port)
 {
     SOCKET replicatorSocket = socket(AF_INET,
         SOCK_STREAM,
@@ -28,7 +27,7 @@ SOCKET ReplicatorConnection()
 
     if (replicatorSocket == INVALID_SOCKET)
     {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
+        printf("Replicator Socket failed with error: %ld\n", WSAGetLastError());
         WSACleanup();
         return 1;
     }
@@ -36,7 +35,7 @@ SOCKET ReplicatorConnection()
     sockaddr_in replicatorAddress;
     replicatorAddress.sin_family = AF_INET;
     replicatorAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-    replicatorAddress.sin_port = htons(REPLICATOR_PORT);
+    replicatorAddress.sin_port = htons(port);
 
     if (connect(replicatorSocket, (SOCKADDR*)&replicatorAddress, sizeof(replicatorAddress)) == SOCKET_ERROR)
     {
