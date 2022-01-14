@@ -22,19 +22,20 @@ bool InitializeWindowsSockets()
 int Menu()
 {
     Sleep(100); // Giving time to RecieveMessageThread to print response if it has one
-    printf("============= MENU =============\n");
+    printf("==================== MENU ====================\n");
     printf("[ 1 ] Register ID\n");
     printf("[ 2 ] Send Data\n");
     printf("[ 3 ] Receive Data\n");\
     printf("[ 4 ] Relaunch Copy\n");
     printf("[ 5 ] Print your data\n");
-    printf("[ 6 ] Stress Test (1000 messages)\n");
-    printf("================================\n");
+    printf("[ 6 ] Stress Test (100 messages)\n");
+    printf("[ 7 ] Stress Test (1000 messages + response)\n");
+    printf("==============================================\n");
     int select = -1;
     do {
         printf("Select Option: ");
         scanf("%d", &select);
-    } while (select < 1 || select > 6);
+    } while (select < 1 || select > 7);
 
     return select;
 }

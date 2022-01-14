@@ -71,6 +71,15 @@ void ResizeQueue(RING_BUFFER* ring);
 */
 bool IsEmpty(RING_BUFFER* ring);
 
+/*
+	Function: DeleteRingBuffer
+	------------------------------------
+	[ Functionality ]: Delete ring buffer
+	[     Params    ]: ring -> RING_BUFFER*
+	[  Return Value ]: None
+*/
+void DeleteRingBuffer(RING_BUFFER* ring);
+
 
 void InitRing(RING_BUFFER* ring, int size)
 {
@@ -202,5 +211,13 @@ void ResizeQueue(RING_BUFFER* ring)
 		}
 		ring->tail += size;
 	}
+	LeaveCriticalSection(&(ring->cs));
+}
+
+void DeleteRingBuffer(RING_BUFFER* ring)
+{
+	EnterCriticalSection(&(ring->cs));
+	// delete dinamicly allocated memory
+	free(ring->data);
 	LeaveCriticalSection(&(ring->cs));
 }

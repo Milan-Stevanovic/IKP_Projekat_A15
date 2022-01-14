@@ -110,7 +110,28 @@ int main()
                 }
                 sendMessage = false;
                 break;
-            case 6: // Stress Test
+            case 6:
+                message.id = htons(clientID);
+                for (int i = 0; i < 100; i++)
+                {
+                    message.flag = htons(SEND_DATA);
+                    sprintf(message.data, "Stress Test - %d", i, strlen(message.data));
+
+                    iResult = send(connectedSocket, (char*)&message, (int)sizeof(Message), 0);
+
+                    if (iResult == SOCKET_ERROR)
+                    {
+                        printf("send failed with error: %d\n", WSAGetLastError());
+                        closesocket(connectedSocket);
+                        WSACleanup();
+                        return 1;
+                    }
+                    Sleep(1);
+                }
+
+                sendMessage = false;
+                break;
+            case 7: // Big Stress Test
                 message.id = htons(clientID);
                 for (int i = 0; i < 1000; i++)
                 {

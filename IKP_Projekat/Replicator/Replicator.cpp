@@ -87,13 +87,15 @@ int main()
         temp = temp->next;
     }
 
+    // Clean Up : Delete client list
+    DeleteClientList(&head);
+    DeleteRingBuffer(&ServerToClientRingBuffer);
+    DeleteRingBuffer(&ClientToServerRingBuffer);
 
     closesocket(serverListenSocket);
     closesocket(clientListenSocket);
     closesocket(serverSocket);
 
-    // Clean Up : Delete client list
-    DeleteClientList(&head);
     WSACleanup();
     printf(BLUE "\nClean up is finished." WHITE);
 
@@ -140,6 +142,7 @@ DWORD WINAPI ClientCopyConnectionThread(LPVOID param) // Thread to connect CopyC
                 {
                     AddClient(&head, socket, 0);
                     printf("[ CONNECTION THREAD ] Client connected!\n");
+                    PrintList(&head);
                 }
             }
         }
@@ -311,7 +314,7 @@ DWORD WINAPI PassMessageFromServerToClientCopyThread(LPVOID param)
         }
         else
         {
-            Sleep(100);
+            Sleep(500);
         }
     }
 }
@@ -333,6 +336,10 @@ DWORD WINAPI PassMessageFromClientCopyToServerThread(LPVOID param)
             {
                 printf(RED"Send failed with error: %d\n" WHITE, WSAGetLastError());
             }
+        }
+        else
+        {
+            Sleep(500);
         }
     }
 }

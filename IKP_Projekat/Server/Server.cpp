@@ -11,13 +11,14 @@
 #define REPLICATOR_PORT 12000
 #define CLIENT_PORT "11000"
 
-RING_BUFFER ClientToReplicatorRingBuffer;
-RING_BUFFER ReplicatorToClientRingBuffer;
-
-ClientNode* head = NULL;
 HANDLE clientConnectHandle, clientMessageHandle, replicatorMessageHandle;
 HANDLE passMessageHandle, passMessageFromReplicatorToClient;
+ClientNode* head = NULL;
+
 SOCKET replicatorSocket = INVALID_SOCKET;
+
+RING_BUFFER ClientToReplicatorRingBuffer;
+RING_BUFFER ReplicatorToClientRingBuffer;
 
 int main()
 {
@@ -47,9 +48,16 @@ int main()
     passMessageFromReplicatorToClient = CreateThread(NULL, 0, &PassMessageFromReplicatorToClientThread, NULL, NULL, NULL);
 
     int lil = getchar();
-    // Clean Up : Delete client list
 
     printf(BLUE "\nPlease wait, clean up in progress ..." WHITE);
+    
+    // Gracefull shutdown
+    CloseHandle(clientConnectHandle);
+    CloseHandle(clientMessageHandle);
+    CloseHandle(replicatorMessageHandle);
+    CloseHandle(passMessageHandle);
+    CloseHandle(passMessageFromReplicatorToClient);
+    
     // Gracefull shutdown
     ClientNode* temp = head;
     while (temp != NULL)
@@ -65,22 +73,18 @@ int main()
         temp = temp->next;
     }
 
-    CloseHandle(clientConnectHandle);
-    CloseHandle(clientMessageHandle);
-
-    CloseHandle(passMessageHandle);
-    CloseHandle(replicatorMessageHandle);
-
-    CloseHandle(passMessageFromReplicatorToClient);
 
     DeleteClientList(&head);
-    
+    DeleteRingBuffer(&ClientToReplicatorRingBuffer);
+    DeleteRingBuffer(&ReplicatorToClientRingBuffer);
+
     closesocket(listenSocket);
     closesocket(replicatorSocket);
+
     WSACleanup();
     printf(BLUE "\nClean up is finished." WHITE);
 
-    getchar();
+    lil = getchar();
 
     return 0;
 }
@@ -94,7 +98,6 @@ DWORD WINAPI ClientConnectionThread(LPVOID param)
     timeval timeVal;
     timeVal.tv_sec = 1;
     timeVal.tv_usec = 0;
-
     do
     {
         FD_SET(*listenSocket, &listenfds);

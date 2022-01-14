@@ -88,6 +88,7 @@ void DeleteClientBySocket(struct ClientNode** head, SOCKET socket)
 
     if (temp != NULL && temp->acceptedSocket == socket) {
         *head = temp->next;
+        closesocket(temp->acceptedSocket);
         free(temp);
         return;
     }
@@ -101,6 +102,7 @@ void DeleteClientBySocket(struct ClientNode** head, SOCKET socket)
         return;
 
     prev->next = temp->next;
+    closesocket(temp->acceptedSocket);
     free(temp);
 }
 
